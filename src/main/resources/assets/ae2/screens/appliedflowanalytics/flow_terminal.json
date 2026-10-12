@@ -1,0 +1,39 @@
+{
+  "$schema": "schema.json",
+  "helpTopic": "appliedflowanalytics:applied-flow-analytics.md#flow-terminal",
+  "includes": ["../common/common.json"],
+  "background": {
+    "texture": "appliedflowanalytics:textures/gui/flow_terminal.png",
+    "srcRect": [0, 0, 256, 231]
+  },
+  "images": {
+    "detail": {
+      "texture": "appliedflowanalytics:textures/gui/flow_terminal_detail.png",
+      "srcRect": [0, 0, 256, 231]
+    }
+  },
+  "text": {
+    "dialog_title": {
+      "position": {"left": 8, "top": 6}
+    }
+  },
+  "widgets": {
+    "done": {
+      "left": 198,
+      "top": 205,
+      "width": 46,
+      "height": 20
+    },
+    "search": {
+      "left": 154,
+      "top": 5,
+      "width": 76,
+      "height": 12
+    },
+    "scrollbar": {
+      "left": 235,
+      "top": 20,
+      "height": 180
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "ae2:part/display_off",
+  "textures": {
+    "lightsBright": "appliedflowanalytics:part/flow_terminal_bright",
+    "lightsDark": "appliedflowanalytics:part/flow_terminal_dark",
+    "lightsMedium": "appliedflowanalytics:part/flow_terminal_medium"
+  }
+}

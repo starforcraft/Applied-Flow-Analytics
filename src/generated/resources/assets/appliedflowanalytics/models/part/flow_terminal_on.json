@@ -1,0 +1,75 @@
+{
+  "elements": [
+    {
+      "faces": {
+        "north": {
+          "neoforge_data": {
+            "block_light": 15,
+            "sky_light": 15
+          },
+          "texture": "#lightsBright",
+          "tintindex": 3
+        }
+      },
+      "from": [
+        2,
+        2,
+        0
+      ],
+      "to": [
+        14,
+        14,
+        2
+      ]
+    },
+    {
+      "faces": {
+        "north": {
+          "neoforge_data": {
+            "block_light": 15,
+            "sky_light": 15
+          },
+          "texture": "#lightsMedium",
+          "tintindex": 2
+        }
+      },
+      "from": [
+        2,
+        2,
+        0
+      ],
+      "to": [
+        14,
+        14,
+        2
+      ]
+    },
+    {
+      "faces": {
+        "north": {
+          "neoforge_data": {
+            "block_light": 15,
+            "sky_light": 15
+          },
+          "texture": "#lightsDark",
+          "tintindex": 1
+        }
+      },
+      "from": [
+        2,
+        2,
+        0
+      ],
+      "to": [
+        14,
+        14,
+        2
+      ]
+    }
+  ],
+  "textures": {
+    "lightsBright": "appliedflowanalytics:part/flow_terminal_bright",
+    "lightsDark": "appliedflowanalytics:part/flow_terminal_dark",
+    "lightsMedium": "appliedflowanalytics:part/flow_terminal_medium"
+  }
+}

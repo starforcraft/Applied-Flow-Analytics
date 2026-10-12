@@ -1,0 +1,8 @@
+{
+  "parent": "ae2:item/display_base",
+  "textures": {
+    "front_bright": "appliedflowanalytics:part/flow_terminal_bright",
+    "front_dark": "appliedflowanalytics:part/flow_terminal_dark",
+    "front_medium": "appliedflowanalytics:part/flow_terminal_medium"
+  }
+}

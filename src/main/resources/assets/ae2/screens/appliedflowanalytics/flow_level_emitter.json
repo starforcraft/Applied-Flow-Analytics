@@ -1,0 +1,5 @@
+{
+  "helpTopic": "appliedflowanalytics:applied-flow-analytics.md#flow-level-emitter",
+  "$schema": "../schema.json",
+  "includes": ["../level_emitter.json"]
+}

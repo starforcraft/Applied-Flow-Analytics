@@ -1,0 +1,58 @@
+package com.ultramega.appliedflowanalytics.screen.sidebuttons;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Locale;
+
+import net.minecraft.resources.ResourceLocation;
+
+import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdentifierUtil.createFlowAnalyticsIdentifier;
+
+public enum Granularity {
+    TICK(1, "t"),
+    SECOND(ChronoUnit.SECONDS, "s"),
+    MINUTE(ChronoUnit.MINUTES, "m"),
+    HOUR(ChronoUnit.HOURS, "h"),
+    DAY(ChronoUnit.DAYS, "d");
+
+    private static final int TICKS_PER_SECOND = 20;
+    private static final Granularity[] VALUES = values();
+
+    private final int tickAmount;
+    private final String symbol;
+    private final String spritePath;
+
+    Granularity(final ChronoUnit chronoUnit, final String symbol) {
+        this(Math.toIntExact(chronoUnit.getDuration().getSeconds() * TICKS_PER_SECOND), symbol);
+    }
+
+    Granularity(final int tickAmount, final String symbol) {
+        this.tickAmount = tickAmount;
+        this.symbol = symbol;
+        this.spritePath = "widget/side_button/granularity/" + this.toString().toLowerCase(Locale.ROOT);
+    }
+
+    public static Granularity next(final Granularity current) {
+        return VALUES[(current.ordinal() + 1) % VALUES.length];
+    }
+
+    public static Granularity prev(final Granularity current) {
+        return VALUES[(current.ordinal() + VALUES.length - 1) % VALUES.length];
+    }
+
+    public int getTickAmount() {
+        return this.tickAmount;
+    }
+
+    public LocalDateTime subtractSamples(final LocalDateTime time, final int samples) {
+        return time.minusNanos((long) samples * this.tickAmount * 50_000_000L);
+    }
+
+    public String perStr() {
+        return "/" + this.symbol;
+    }
+
+    public ResourceLocation getSprite() {
+        return createFlowAnalyticsIdentifier(this.spritePath);
+    }
+}

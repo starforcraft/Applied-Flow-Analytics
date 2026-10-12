@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_counterpart": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ae2:level_emitter"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "appliedflowanalytics:flow_level_emitter"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_counterpart"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "appliedflowanalytics:flow_level_emitter"
+    ]
+  }
+}

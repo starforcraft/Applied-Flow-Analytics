@@ -1,0 +1,6 @@
+{
+  "parent": "ae2:item/level_emitter",
+  "textures": {
+    "emitter": "appliedflowanalytics:part/flow_level_emitter"
+  }
+}

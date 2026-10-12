@@ -1,0 +1,5 @@
+@ParametersAreNonnullByDefault
+@FieldsAndMethodsAreNonnullByDefault
+package com.ultramega.appliedflowanalytics.util;
+
+import javax.annotation.ParametersAreNonnullByDefault;

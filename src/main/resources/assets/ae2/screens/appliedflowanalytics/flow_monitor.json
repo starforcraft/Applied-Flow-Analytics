@@ -1,0 +1,23 @@
+{
+  "$schema": "schema.json",
+  "helpTopic": "appliedflowanalytics:applied-flow-analytics.md#flow-monitor",
+  "includes": ["../common/common.json", "../common/player_inventory.json"],
+  "background": {
+    "texture": "guis/me_chest.png",
+    "srcRect": [0, 0, 176, 168]
+  },
+  "slots": {
+    "CONFIG": {
+      "left": 80,
+      "top": 37
+    }
+  },
+  "text": {
+    "dialog_title": {
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  }
+}

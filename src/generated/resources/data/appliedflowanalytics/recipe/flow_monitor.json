@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ae2:storage_monitor"
+    },
+    {
+      "item": "ae2:calculation_processor"
+    },
+    {
+      "item": "minecraft:comparator"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "appliedflowanalytics:flow_monitor"
+  }
+}
