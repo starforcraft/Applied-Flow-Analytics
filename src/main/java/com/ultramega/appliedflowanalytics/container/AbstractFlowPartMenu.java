@@ -12,10 +12,8 @@ import appeng.parts.AEBasePart;
 import appeng.util.ConfigInventory;
 
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public abstract class AbstractFlowPartMenu<T extends AEBasePart & IConfigurableObject> extends AEBaseMenu implements IConfigurableObject {
@@ -23,16 +21,21 @@ public abstract class AbstractFlowPartMenu<T extends AEBasePart & IConfigurableO
     private final IConfigManager clientConfigManager;
     private boolean settingsSent;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected AbstractFlowPartMenu(final MenuType<?> type, final int id, final Inventory inventory, final T host) {
         super(type, id, inventory, host);
         this.host = host;
 
         final IConfigManagerBuilder builder = IConfigManager.builder(() -> { });
         for (final Setting<?> setting : host.getConfigManager().getSettings()) {
-            builder.registerSetting((Setting) setting, host.getConfigManager().getSetting(setting));
+            registerSetting(builder, setting, host.getConfigManager());
         }
         this.clientConfigManager = builder.build();
+    }
+
+    private static <V extends Enum<V>> void registerSetting(final IConfigManagerBuilder builder,
+                                                           final Setting<V> setting,
+                                                           final IConfigManager source) {
+        builder.registerSetting(setting, source.getSetting(setting));
     }
 
     public T getHost() {
@@ -65,14 +68,6 @@ public abstract class AbstractFlowPartMenu<T extends AEBasePart & IConfigurableO
         for (int column = 0; column < 9; column++) {
             this.addSlot(new Slot(inventory, column, 8 + column * 18, inventoryY + 58), SlotSemantics.PLAYER_HOTBAR);
         }
-    }
-
-    @Override
-    public ItemStack quickMoveStack(final Player player, final int slotId) {
-        if (this.stillValid(player) && slotId > 0 && slotId < this.slots.size() && this.slots.getFirst() instanceof FakeSlot filter) {
-            filter.set(this.slots.get(slotId).getItem());
-        }
-        return ItemStack.EMPTY;
     }
 
     @Override

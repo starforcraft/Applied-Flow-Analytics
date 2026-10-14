@@ -1,6 +1,5 @@
 package com.ultramega.appliedflowanalytics.support;
 
-import com.ultramega.appliedflowanalytics.screen.sidebuttons.DetectorMode;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.FlowDirection;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.Granularity;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.LineStyle;
@@ -27,7 +26,6 @@ public final class FlowSettings {
 
     public static final Setting<MonitorItemVisibility> ITEM_VISIBILITY = register("item_visibility", MonitorItemVisibility.class);
     public static final Setting<FlowDirection> FLOW_TEXT = register("flow_text", FlowDirection.class);
-    public static final Setting<DetectorMode> MODE = register("mode", DetectorMode.class);
     public static final Setting<FlowDirection> FLOW_DIRECTION = register("flow_direction", FlowDirection.class);
 
     private FlowSettings() {

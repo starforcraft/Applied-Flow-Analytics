@@ -1,15 +1,17 @@
 package com.ultramega.appliedflowanalytics.screen;
 
 import com.ultramega.appliedflowanalytics.container.FlowLevelEmitterContainerMenu;
-import com.ultramega.appliedflowanalytics.screen.sidebuttons.DetectorModeSideButtonWidget;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.FlowDirection;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.MonitorDisplaySideButtonWidget;
 import com.ultramega.appliedflowanalytics.support.FlowSettings;
 
+import appeng.api.config.RedstoneMode;
+import appeng.api.config.Settings;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.NumberEntryType;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.NumberEntryWidget;
+import appeng.client.gui.widgets.SettingToggleButton;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -17,6 +19,7 @@ import net.minecraft.world.entity.player.Inventory;
 public final class FlowLevelEmitterScreen extends AEBaseScreen<FlowLevelEmitterContainerMenu> {
     private static final int RATE_PRECISION = 1_000_000;
     private final NumberEntryWidget amount;
+    private final SettingToggleButton<RedstoneMode> redstoneModeButton;
 
     public FlowLevelEmitterScreen(final FlowLevelEmitterContainerMenu menu,
                                   final Inventory inventory,
@@ -32,7 +35,9 @@ public final class FlowLevelEmitterScreen extends AEBaseScreen<FlowLevelEmitterC
         this.amount.setOnChange(this::applyAmount);
         this.amount.setOnConfirm(this::onClose);
 
-        this.addToLeftToolbar(new DetectorModeSideButtonWidget(this.menu));
+        this.redstoneModeButton = this.addToLeftToolbar(new SettingToggleButton<>(Settings.REDSTONE_EMITTER,
+            menu.getConfigManager().getSetting(Settings.REDSTONE_EMITTER),
+            (button, backwards) -> menu.setSetting(Settings.REDSTONE_EMITTER, button.getNextValue(backwards))));
         this.addToLeftToolbar(new MonitorDisplaySideButtonWidget<>(
             "detector_direction", this.menu,
             FlowSettings.FLOW_DIRECTION,
@@ -44,6 +49,7 @@ public final class FlowLevelEmitterScreen extends AEBaseScreen<FlowLevelEmitterC
     @Override
     protected void updateBeforeRender() {
         super.updateBeforeRender();
+        this.redstoneModeButton.set(this.menu.getConfigManager().getSetting(Settings.REDSTONE_EMITTER));
         final NumberEntryType type = this.getNumberEntryType();
         if (!type.equals(this.amount.getType())) {
             this.amount.setType(type);
@@ -51,7 +57,7 @@ public final class FlowLevelEmitterScreen extends AEBaseScreen<FlowLevelEmitterC
     }
 
     private NumberEntryType getNumberEntryType() {
-        final var resource = this.menu.getHost().getFilter().getKey(0);
+        final var resource = this.menu.getHost().getConfig().getKey(0);
         final String unit = resource == null ? null : resource.getUnitSymbol();
         return new NumberEntryType(RATE_PRECISION, unit == null ? "/s" : unit + "/s");
     }

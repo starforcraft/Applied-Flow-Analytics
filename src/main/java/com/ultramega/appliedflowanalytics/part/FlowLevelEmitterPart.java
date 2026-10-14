@@ -4,15 +4,17 @@ import com.ultramega.appliedflowanalytics.Platform;
 import com.ultramega.appliedflowanalytics.container.FlowLevelEmitterContainerMenu;
 import com.ultramega.appliedflowanalytics.network.FlowHistoryNode;
 import com.ultramega.appliedflowanalytics.registry.ModDataComponents;
-import com.ultramega.appliedflowanalytics.screen.sidebuttons.DetectorMode;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.FlowDirection;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.Granularity;
 import com.ultramega.appliedflowanalytics.support.FlowSettings;
 
+import appeng.api.config.Settings;
+import appeng.api.ids.AEComponents;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
 import appeng.api.stacks.AEKey;
 import appeng.api.util.IConfigManagerBuilder;
+import appeng.helpers.IConfigInvHost;
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
 import appeng.parts.PartModel;
@@ -21,6 +23,7 @@ import appeng.parts.automation.StorageLevelEmitterPart;
 import appeng.util.ConfigInventory;
 import appeng.util.SettingsFrom;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -33,7 +36,7 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdentifierUtil.createFlowAnalyticsIdentifier;
 
-public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart {
+public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart implements IConfigInvHost {
     public static final ResourceLocation MODEL_BASE_OFF = createFlowAnalyticsIdentifier("part/flow_level_emitter_off");
     public static final ResourceLocation MODEL_BASE_ON = createFlowAnalyticsIdentifier("part/flow_level_emitter_on");
     private static final IPartModel MODELS_OFF = new PartModel(MODEL_BASE_OFF, StorageLevelEmitterPart.MODEL_STATUS_OFF);
@@ -55,7 +58,6 @@ public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart {
     @Override
     protected void registerSettings(final IConfigManagerBuilder builder) {
         super.registerSettings(builder);
-        builder.registerSetting(FlowSettings.MODE, DetectorMode.BELOW);
         builder.registerSetting(FlowSettings.FLOW_DIRECTION, FlowDirection.INFLOW);
     }
 
@@ -77,15 +79,11 @@ public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart {
             this.output = false;
         } else {
             final var flow = history.getRollingFlow(resource, Granularity.SECOND.getTickAmount());
-            final long threshold = this.normalizeAmount(resource);
-            this.output = flow.recordedTicks() > 0 && this.getFlowDirection().matches(flow.inflow(), flow.outflow(), threshold, this.getMode());
+            final BigDecimal threshold = BigDecimal.valueOf(this.amount).multiply(BigDecimal.valueOf(resource.getAmountPerUnit()));
+            this.output = flow.recordedTicks() > 0 && this.getFlowDirection().matches(flow.inflow(), flow.outflow(), threshold,
+                this.getConfigManager().getSetting(Settings.REDSTONE_EMITTER));
         }
         this.updateState();
-    }
-
-    private long normalizeAmount(final AEKey resource) {
-        final double scaled = this.amount * resource.getAmountPerUnit();
-        return (long) Math.clamp(scaled, (double) Long.MIN_VALUE, (double) Long.MAX_VALUE);
     }
 
     private void settingsChanged() {
@@ -114,7 +112,8 @@ public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart {
         return this.historyNode;
     }
 
-    public ConfigInventory getFilter() {
+    @Override
+    public ConfigInventory getConfig() {
         return this.filter;
     }
 
@@ -129,14 +128,6 @@ public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart {
         }
     }
 
-    public DetectorMode getMode() {
-        return this.getConfigManager().getSetting(FlowSettings.MODE);
-    }
-
-    public void setMode(final DetectorMode value) {
-        this.getConfigManager().putSetting(FlowSettings.MODE, Objects.requireNonNull(value));
-    }
-
     public FlowDirection getFlowDirection() {
         return this.getConfigManager().getSetting(FlowSettings.FLOW_DIRECTION);
     }
@@ -148,7 +139,6 @@ public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart {
     public void writeConfiguration(final CompoundTag tag, final HolderLookup.Provider provider) {
         this.filter.writeToChildTag(tag, "filter", provider);
         tag.putDouble("amount", this.amount);
-        this.getConfigManager().writeToNBT(tag, provider);
     }
 
     public void readConfiguration(final CompoundTag tag, final HolderLookup.Provider provider) {
@@ -199,25 +189,31 @@ public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart {
     @Override
     public void exportSettings(final SettingsFrom mode, final DataComponentMap.Builder builder) {
         super.exportSettings(mode, builder);
-        final CompoundTag tag = new CompoundTag();
-        this.writeConfiguration(tag, this.getLevel().registryAccess());
+        builder.set(ModDataComponents.FLOW_THRESHOLD.get(), this.amount);
         if (mode == SettingsFrom.DISMANTLE_ITEM) {
-            this.historyNode.saveHistoryId(tag);
+            builder.set(AEComponents.EXPORTED_SETTINGS, this.getConfigManager().exportSettings());
+            builder.set(AEComponents.EXPORTED_CONFIG_INV, this.filter.toList());
+            final var historyId = this.historyNode.getHistoryId();
+            if (historyId != null) {
+                builder.set(ModDataComponents.HISTORY_ID.get(), historyId);
+            }
         }
-        builder.set(ModDataComponents.FLOW_SETTINGS.get(), tag);
     }
 
     @Override
     public void importSettings(final SettingsFrom mode, final DataComponentMap input, @Nullable final Player player) {
         super.importSettings(mode, input, player);
-        final CompoundTag tag = input.get(ModDataComponents.FLOW_SETTINGS.get());
-        if (tag != null) {
-            this.readConfiguration(tag, this.getLevel().registryAccess());
-            if (mode == SettingsFrom.DISMANTLE_ITEM) {
-                this.historyNode.loadHistoryId(tag);
-            }
-            this.getHost().markForSave();
-            this.getHost().markForUpdate();
+        final Double threshold = input.get(ModDataComponents.FLOW_THRESHOLD.get());
+        if (threshold != null) {
+            this.setAmount(threshold);
         }
+        if (mode == SettingsFrom.DISMANTLE_ITEM) {
+            final var historyId = input.get(ModDataComponents.HISTORY_ID.get());
+            if (historyId != null) {
+                this.historyNode.setHistoryId(historyId);
+            }
+        }
+        this.getHost().markForSave();
+        this.getHost().markForUpdate();
     }
 }

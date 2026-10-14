@@ -25,7 +25,7 @@ import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdenti
 public class FlowTerminalContainerMenu extends AbstractFlowPartMenu<FlowTerminalPart> {
     public static final MenuType<FlowTerminalContainerMenu> TYPE = MenuTypeBuilder
         .create(FlowTerminalContainerMenu::new, FlowTerminalPart.class)
-        .build(createFlowAnalyticsIdentifier("flow_terminal"));
+        .buildUnregistered(createFlowAnalyticsIdentifier("flow_terminal"));
 
     public final Level world;
     public final Player entity;

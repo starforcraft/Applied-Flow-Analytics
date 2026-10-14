@@ -3,7 +3,6 @@ package com.ultramega.appliedflowanalytics.part;
 import com.ultramega.appliedflowanalytics.container.FlowMonitorContainerMenu;
 import com.ultramega.appliedflowanalytics.data.FlowSnapshotData;
 import com.ultramega.appliedflowanalytics.network.MenuState;
-import com.ultramega.appliedflowanalytics.registry.ModMenus;
 import com.ultramega.appliedflowanalytics.screen.FlowMonitorRenderer;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.FlowDirection;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.Granularity;
@@ -17,7 +16,7 @@ import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
 import appeng.api.stacks.AEKey;
 import appeng.api.util.IConfigManager;
-import appeng.api.util.IConfigurableObject;
+import appeng.helpers.IConfigInvHost;
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
 import appeng.parts.PartModel;
@@ -41,7 +40,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 
 import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdentifierUtil.createFlowAnalyticsIdentifier;
 
-public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IConfigurableObject {
+public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IConfigInvHost {
     public static final String ITEM_VISIBILITY_TAG = "item_visibility";
     public static final String FLOW_TEXT_TAG = "flow_text";
     public static final String GRANULARITY_TAG = "granularity";
@@ -120,7 +119,8 @@ public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IC
         }
     }
 
-    public ConfigInventory getFilter() {
+    @Override
+    public ConfigInventory getConfig() {
         return this.filter;
     }
 
@@ -204,13 +204,6 @@ public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IC
         try {
             this.filter.readFromChildTag(tag, "filter", provider);
             this.configManager.readFromNBT(tag, provider);
-            if (tag.contains("redstone", net.minecraft.nbt.Tag.TAG_STRING)) {
-                try {
-                    this.setRedstoneMode(RedstoneMode.valueOf(tag.getString("redstone")));
-                } catch (IllegalArgumentException ignored) {
-                    this.setRedstoneMode(RedstoneMode.IGNORE);
-                }
-            }
         } finally {
             this.loadingData = false;
         }

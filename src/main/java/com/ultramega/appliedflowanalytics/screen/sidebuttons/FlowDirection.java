@@ -1,5 +1,8 @@
 package com.ultramega.appliedflowanalytics.screen.sidebuttons;
 
+import appeng.api.config.RedstoneMode;
+
+import java.math.BigDecimal;
 import java.util.Locale;
 
 import net.minecraft.resources.ResourceLocation;
@@ -41,11 +44,12 @@ public enum FlowDirection {
         };
     }
 
-    public boolean matches(final long inflow, final long outflow, final long threshold, final DetectorMode mode) {
-        final long amount = this.getComparisonValue(inflow, outflow);
+    public boolean matches(final long inflow, final long outflow, final BigDecimal threshold, final RedstoneMode mode) {
+        final int comparison = BigDecimal.valueOf(this.getComparisonValue(inflow, outflow)).compareTo(threshold);
         return switch (mode) {
-            case ABOVE_OR_EQUAL -> amount >= threshold;
-            case BELOW -> amount < threshold;
+            case HIGH_SIGNAL -> comparison >= 0;
+            case LOW_SIGNAL -> comparison < 0;
+            default -> throw new IllegalArgumentException("Unsupported emitter mode: " + mode);
         };
     }
 }

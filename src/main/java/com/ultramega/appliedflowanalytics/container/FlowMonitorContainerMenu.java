@@ -13,9 +13,9 @@ import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdenti
 public final class FlowMonitorContainerMenu extends AbstractFlowPartMenu<FlowMonitorPart> {
     public static final MenuType<FlowMonitorContainerMenu> TYPE = MenuTypeBuilder
         .create(FlowMonitorContainerMenu::new, FlowMonitorPart.class)
-        .withInitialData((host, buffer) -> GenericStack.writeBuffer(host.getFilter().getStack(0), buffer),
-            (host, menu, buffer) -> host.getFilter().setStack(0, GenericStack.readBuffer(buffer)))
-        .build(createFlowAnalyticsIdentifier("flow_monitor"));
+        .withInitialData((host, buffer) -> GenericStack.writeBuffer(host.getConfig().getStack(0), buffer),
+            (host, menu, buffer) -> host.getConfig().setStack(0, GenericStack.readBuffer(buffer)))
+        .buildUnregistered(createFlowAnalyticsIdentifier("flow_monitor"));
 
     public FlowMonitorContainerMenu(final MenuType<FlowMonitorContainerMenu> type,
                                     final int id,
@@ -23,6 +23,6 @@ public final class FlowMonitorContainerMenu extends AbstractFlowPartMenu<FlowMon
                                     final FlowMonitorPart host) {
         super(type, id, inventory, host);
 
-        this.addFilterAndInventory(inventory, host.getFilter(), 55);
+        this.addFilterAndInventory(inventory, host.getConfig(), 55);
     }
 }

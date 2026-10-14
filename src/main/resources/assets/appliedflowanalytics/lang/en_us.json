@@ -3,8 +3,6 @@
   "item.appliedflowanalytics.flow_terminal": "Flow Terminal",
   "item.appliedflowanalytics.flow_monitor": "Flow Monitor",
   "item.appliedflowanalytics.flow_level_emitter": "Flow Level Emitter",
-  "gui.appliedflowanalytics.flow.detector_mode.above_or_equal": "Emit when flow is above or equal to the amount",
-  "gui.appliedflowanalytics.flow.detector_mode.below": "Emit when flow is below the amount",
   "gui.appliedflowanalytics.flow.detector_direction": "Detected flow",
   "gui.appliedflowanalytics.flow.detector_direction.inflow": "Inflow: amount entering storage",
   "gui.appliedflowanalytics.flow.detector_direction.outflow": "Outflow: amount leaving storage (positive)",

@@ -4,7 +4,10 @@ import com.ultramega.appliedflowanalytics.Platform;
 import com.ultramega.appliedflowanalytics.network.FlowHistoryNode;
 import com.ultramega.appliedflowanalytics.registry.ModDataComponents;
 
+import appeng.api.ids.AEComponents;
 import appeng.api.parts.IPartItem;
+import appeng.api.util.IConfigurableObject;
+import appeng.helpers.IConfigInvHost;
 import appeng.parts.reporting.AbstractDisplayPart;
 import appeng.util.SettingsFrom;
 
@@ -15,7 +18,7 @@ import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 
-public abstract class AbstractFlowDisplayPart extends AbstractDisplayPart {
+public abstract class AbstractFlowDisplayPart extends AbstractDisplayPart implements IConfigurableObject {
     protected final FlowHistoryNode historyNode;
 
     protected AbstractFlowDisplayPart(final IPartItem<?> partItem, final boolean requireChannel) {
@@ -59,26 +62,28 @@ public abstract class AbstractFlowDisplayPart extends AbstractDisplayPart {
     @Override
     public void exportSettings(final SettingsFrom mode, final DataComponentMap.Builder builder) {
         super.exportSettings(mode, builder);
-        final CompoundTag tag = new CompoundTag();
-        this.writeConfiguration(tag, this.getLevel().registryAccess());
         if (mode == SettingsFrom.DISMANTLE_ITEM) {
-            this.historyNode.saveHistoryId(tag);
+            builder.set(AEComponents.EXPORTED_SETTINGS, this.getConfigManager().exportSettings());
+            if (this instanceof IConfigInvHost configInvHost) {
+                builder.set(AEComponents.EXPORTED_CONFIG_INV, configInvHost.getConfig().toList());
+            }
+            final var historyId = this.historyNode.getHistoryId();
+            if (historyId != null) {
+                builder.set(ModDataComponents.HISTORY_ID.get(), historyId);
+            }
         }
-        builder.set(ModDataComponents.FLOW_SETTINGS.get(), tag);
     }
 
     @Override
     public void importSettings(final SettingsFrom mode, final DataComponentMap input, @Nullable final Player player) {
         super.importSettings(mode, input, player);
-        final CompoundTag tag = input.get(ModDataComponents.FLOW_SETTINGS.get());
-        if (tag != null) {
-            this.readConfiguration(tag, this.getLevel().registryAccess());
-            if (mode == SettingsFrom.DISMANTLE_ITEM) {
-                this.historyNode.loadHistoryId(tag);
+        if (mode == SettingsFrom.DISMANTLE_ITEM) {
+            final var historyId = input.get(ModDataComponents.HISTORY_ID.get());
+            if (historyId != null) {
+                this.historyNode.setHistoryId(historyId);
             }
-            this.getHost().markForSave();
-            this.getHost().markForUpdate();
         }
+        this.getHost().markForSave();
+        this.getHost().markForUpdate();
     }
-
 }

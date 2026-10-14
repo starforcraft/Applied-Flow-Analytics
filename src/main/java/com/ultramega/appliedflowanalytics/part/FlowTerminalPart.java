@@ -1,7 +1,6 @@
 package com.ultramega.appliedflowanalytics.part;
 
 import com.ultramega.appliedflowanalytics.container.FlowTerminalContainerMenu;
-import com.ultramega.appliedflowanalytics.registry.ModMenus;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.Granularity;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.LineStyle;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.ResourceView;
@@ -13,7 +12,6 @@ import appeng.api.config.SortOrder;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
 import appeng.api.util.IConfigManager;
-import appeng.api.util.IConfigurableObject;
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
 import appeng.parts.PartModel;
@@ -29,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdentifierUtil.createFlowAnalyticsIdentifier;
 
-public final class FlowTerminalPart extends AbstractFlowDisplayPart implements IConfigurableObject {
+public final class FlowTerminalPart extends AbstractFlowDisplayPart {
     public static final ResourceLocation MODEL_OFF = createFlowAnalyticsIdentifier("part/flow_terminal_off");
     public static final ResourceLocation MODEL_ON = createFlowAnalyticsIdentifier("part/flow_terminal_on");
     private static final IPartModel MODELS_OFF = new PartModel(MODEL_BASE, MODEL_OFF, MODEL_STATUS_OFF);

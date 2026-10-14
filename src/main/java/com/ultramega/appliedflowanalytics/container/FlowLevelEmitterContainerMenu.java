@@ -14,13 +14,13 @@ public final class FlowLevelEmitterContainerMenu extends AbstractFlowPartMenu<Fl
     public static final MenuType<FlowLevelEmitterContainerMenu> TYPE = MenuTypeBuilder
         .create(FlowLevelEmitterContainerMenu::new, FlowLevelEmitterPart.class)
         .withInitialData((host, buffer) -> {
-            GenericStack.writeBuffer(host.getFilter().getStack(0), buffer);
+            GenericStack.writeBuffer(host.getConfig().getStack(0), buffer);
             buffer.writeDouble(host.getAmount());
         }, (host, menu, buffer) -> {
-            host.getFilter().setStack(0, GenericStack.readBuffer(buffer));
+            host.getConfig().setStack(0, GenericStack.readBuffer(buffer));
             menu.initializeAmount(buffer.readDouble());
         })
-        .build(createFlowAnalyticsIdentifier("flow_level_emitter"));
+        .buildUnregistered(createFlowAnalyticsIdentifier("flow_level_emitter"));
 
     private double currentAmount;
 
@@ -29,7 +29,7 @@ public final class FlowLevelEmitterContainerMenu extends AbstractFlowPartMenu<Fl
         super(type, id, inventory, host);
 
         this.registerClientAction("amount", Double.class, this::setAmount);
-        this.addFilterAndInventory(inventory, host.getFilter(), 98);
+        this.addFilterAndInventory(inventory, host.getConfig(), 98);
     }
 
     public void initializeAmount(final double value) {
