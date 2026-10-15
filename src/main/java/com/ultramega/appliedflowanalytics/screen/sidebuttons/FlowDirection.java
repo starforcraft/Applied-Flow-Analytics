@@ -5,7 +5,7 @@ import appeng.api.config.RedstoneMode;
 import java.math.BigDecimal;
 import java.util.Locale;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdentifierUtil.createFlowAnalyticsIdentifier;
 
@@ -20,7 +20,7 @@ public enum FlowDirection {
         this.color = color;
     }
 
-    public ResourceLocation getSprite() {
+    public Identifier getSprite() {
         return createFlowAnalyticsIdentifier("widget/side_button/flow_text/" + this.toString().toLowerCase(Locale.ROOT));
     }
 

@@ -10,29 +10,19 @@ import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.util.IConfigManager;
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
-import appeng.parts.PartModel;
 import appeng.util.InteractionUtil;
 
 import java.util.Objects;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
-import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdentifierUtil.createFlowAnalyticsIdentifier;
-
 public final class FlowTerminalPart extends AbstractFlowDisplayPart {
-    public static final ResourceLocation MODEL_OFF = createFlowAnalyticsIdentifier("part/flow_terminal_off");
-    public static final ResourceLocation MODEL_ON = createFlowAnalyticsIdentifier("part/flow_terminal_on");
-    private static final IPartModel MODELS_OFF = new PartModel(MODEL_BASE, MODEL_OFF, MODEL_STATUS_OFF);
-    private static final IPartModel MODELS_ON = new PartModel(MODEL_BASE, MODEL_ON, MODEL_STATUS_ON);
-    private static final IPartModel MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, MODEL_ON, MODEL_STATUS_HAS_CHANNEL);
 
     private final IConfigManager configManager = FlowSettings.createConfigManager(this::settingsChanged);
     private boolean loadingData;
@@ -93,40 +83,35 @@ public final class FlowTerminalPart extends AbstractFlowDisplayPart {
     }
 
     @Override
-    public void writeConfiguration(final CompoundTag tag, final HolderLookup.Provider provider) {
-        this.configManager.writeToNBT(tag, provider);
+    public void writeConfiguration(final ValueOutput tag) {
+        this.configManager.writeToNBT(tag);
     }
 
     @Override
-    public void readConfiguration(final CompoundTag tag, final HolderLookup.Provider provider) {
+    public void readConfiguration(final ValueInput tag) {
         this.loadingData = true;
         try {
-            this.configManager.readFromNBT(tag, provider);
+            this.configManager.readFromNBT(tag);
         } finally {
             this.loadingData = false;
         }
     }
 
     @Override
-    public void writeToNBT(final CompoundTag tag, final HolderLookup.Provider provider) {
-        super.writeToNBT(tag, provider);
-        this.writeConfiguration(tag, provider);
+    public void writeToNBT(final ValueOutput tag) {
+        super.writeToNBT(tag);
+        this.writeConfiguration(tag);
     }
 
     @Override
-    public void readFromNBT(final CompoundTag tag, final HolderLookup.Provider provider) {
-        super.readFromNBT(tag, provider);
-        this.readConfiguration(tag, provider);
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return this.selectModel(MODELS_OFF, MODELS_ON, MODELS_HAS_CHANNEL);
+    public void readFromNBT(final ValueInput tag) {
+        super.readFromNBT(tag);
+        this.readConfiguration(tag);
     }
 
     @Override
     public boolean onUseWithoutItem(final Player player, final Vec3 pos) {
-        if (InteractionUtil.canWrenchRotate(player.getInventory().getSelected())) {
+        if (InteractionUtil.canWrenchRotate(player.getInventory().getSelectedItem())) {
             return super.onUseWithoutItem(player, pos);
         }
         if (!this.isClientSide()) {

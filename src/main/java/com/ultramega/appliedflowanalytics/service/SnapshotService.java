@@ -23,7 +23,7 @@ public final class SnapshotService {
                                final long requestId,
                                final int granularity,
                                final boolean allStored) {
-        AppliedFlowAnalyticsMod.queueServerWork(player.server, () -> {
+        AppliedFlowAnalyticsMod.queueServerWork(player.level().getServer(), () -> {
             if (player.containerMenu != menu || !menu.stillValid(player)) {
                 return;
             }
@@ -60,7 +60,7 @@ public final class SnapshotService {
                                        final long requestId,
                                        final AEKey resource,
                                        final int granularity) {
-        AppliedFlowAnalyticsMod.queueServerWork(player.server, () -> {
+        AppliedFlowAnalyticsMod.queueServerWork(player.level().getServer(), () -> {
             if (player.containerMenu != menu || !menu.stillValid(player)) {
                 return;
             }

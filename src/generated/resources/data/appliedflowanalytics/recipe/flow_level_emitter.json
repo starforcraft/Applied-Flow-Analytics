@@ -2,18 +2,11 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "ae2:level_emitter"
-    },
-    {
-      "item": "ae2:calculation_processor"
-    },
-    {
-      "item": "minecraft:comparator"
-    }
+    "ae2:level_emitter",
+    "ae2:calculation_processor",
+    "minecraft:comparator"
   ],
   "result": {
-    "count": 1,
     "id": "appliedflowanalytics:flow_level_emitter"
   }
 }

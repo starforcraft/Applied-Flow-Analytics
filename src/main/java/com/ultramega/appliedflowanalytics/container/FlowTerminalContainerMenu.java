@@ -18,6 +18,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdentifierUtil.createFlowAnalyticsIdentifier;
@@ -41,8 +42,8 @@ public class FlowTerminalContainerMenu extends AbstractFlowPartMenu<FlowTerminal
         final MenuStateUpdateMessage message = new MenuStateUpdateMessage(this.containerId, requestId, state);
         if (player instanceof ServerPlayer serverPlayer) {
             PacketDistributor.sendToPlayer(serverPlayer, message);
-        } else if (player.level().isClientSide) {
-            PacketDistributor.sendToServer(message);
+        } else if (player.level().isClientSide()) {
+            ClientPacketDistributor.sendToServer(message);
         }
     }
 

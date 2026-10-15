@@ -11,15 +11,12 @@ import com.ultramega.appliedflowanalytics.support.FlowSettings;
 import appeng.api.config.Settings;
 import appeng.api.ids.AEComponents;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.stacks.AEKey;
 import appeng.api.util.IConfigManagerBuilder;
 import appeng.helpers.IConfigInvHost;
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
-import appeng.parts.PartModel;
 import appeng.parts.automation.AbstractLevelEmitterPart;
-import appeng.parts.automation.StorageLevelEmitterPart;
 import appeng.util.ConfigInventory;
 import appeng.util.SettingsFrom;
 
@@ -27,22 +24,13 @@ import java.math.BigDecimal;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
-import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdentifierUtil.createFlowAnalyticsIdentifier;
-
 public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart implements IConfigInvHost {
-    public static final ResourceLocation MODEL_BASE_OFF = createFlowAnalyticsIdentifier("part/flow_level_emitter_off");
-    public static final ResourceLocation MODEL_BASE_ON = createFlowAnalyticsIdentifier("part/flow_level_emitter_on");
-    private static final IPartModel MODELS_OFF = new PartModel(MODEL_BASE_OFF, StorageLevelEmitterPart.MODEL_STATUS_OFF);
-    private static final IPartModel MODELS_ON = new PartModel(MODEL_BASE_OFF, StorageLevelEmitterPart.MODEL_STATUS_ON);
-    private static final IPartModel MODELS_ACTIVE_OFF = new PartModel(MODEL_BASE_OFF, StorageLevelEmitterPart.MODEL_STATUS_HAS_CHANNEL);
-    private static final IPartModel MODELS_ACTIVE_ON = new PartModel(MODEL_BASE_ON, StorageLevelEmitterPart.MODEL_STATUS_HAS_CHANNEL);
 
     private final FlowHistoryNode historyNode;
     private final ConfigInventory filter = ConfigInventory.configTypes(1).changeListener(this::settingsChanged).build();
@@ -136,35 +124,35 @@ public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart impleme
         this.getConfigManager().putSetting(FlowSettings.FLOW_DIRECTION, Objects.requireNonNull(value));
     }
 
-    public void writeConfiguration(final CompoundTag tag, final HolderLookup.Provider provider) {
-        this.filter.writeToChildTag(tag, "filter", provider);
+    public void writeConfiguration(final ValueOutput tag) {
+        this.filter.writeToChildTag(tag, "filter");
         tag.putDouble("amount", this.amount);
     }
 
-    public void readConfiguration(final CompoundTag tag, final HolderLookup.Provider provider) {
+    public void readConfiguration(final ValueInput tag) {
         this.loadingData = true;
         try {
-            this.filter.readFromChildTag(tag, "filter", provider);
-            this.amount = Double.isFinite(tag.getDouble("amount")) ? tag.getDouble("amount") : 0;
+            this.filter.readFromChildTag(tag, "filter");
+            this.amount = Double.isFinite(tag.getDoubleOr("amount", 0)) ? tag.getDoubleOr("amount", 0) : 0;
         } finally {
             this.loadingData = false;
         }
     }
 
     @Override
-    public void writeToNBT(final CompoundTag tag, final HolderLookup.Provider provider) {
-        super.writeToNBT(tag, provider);
+    public void writeToNBT(final ValueOutput tag) {
+        super.writeToNBT(tag);
         this.historyNode.saveHistoryId(tag);
-        this.writeConfiguration(tag, provider);
+        this.writeConfiguration(tag);
     }
 
     @Override
-    public void readFromNBT(final CompoundTag tag, final HolderLookup.Provider provider) {
+    public void readFromNBT(final ValueInput tag) {
         this.loadingData = true;
         try {
-            super.readFromNBT(tag, provider);
+            super.readFromNBT(tag);
             this.historyNode.loadHistoryId(tag);
-            this.readConfiguration(tag, provider);
+            this.readConfiguration(tag);
         } finally {
             this.loadingData = false;
         }
@@ -176,14 +164,6 @@ public final class FlowLevelEmitterPart extends AbstractLevelEmitterPart impleme
             MenuOpener.open(FlowLevelEmitterContainerMenu.TYPE, player, MenuLocators.forPart(this));
         }
         return true;
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        if (this.isActive()) {
-            return this.isLevelEmitterOn() ? MODELS_ACTIVE_ON : MODELS_ACTIVE_OFF;
-        }
-        return this.isPowered() ? MODELS_ON : MODELS_OFF;
     }
 
     @Override

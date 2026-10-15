@@ -3,7 +3,6 @@ package com.ultramega.appliedflowanalytics.part;
 import com.ultramega.appliedflowanalytics.container.FlowMonitorContainerMenu;
 import com.ultramega.appliedflowanalytics.data.FlowSnapshotData;
 import com.ultramega.appliedflowanalytics.network.MenuState;
-import com.ultramega.appliedflowanalytics.screen.FlowMonitorRenderer;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.FlowDirection;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.Granularity;
 import com.ultramega.appliedflowanalytics.screen.sidebuttons.LineStyle;
@@ -13,13 +12,11 @@ import com.ultramega.appliedflowanalytics.support.FlowSettings;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.stacks.AEKey;
 import appeng.api.util.IConfigManager;
 import appeng.helpers.IConfigInvHost;
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
-import appeng.parts.PartModel;
 import appeng.util.ConfigInventory;
 import appeng.util.InteractionUtil;
 
@@ -27,29 +24,21 @@ import java.util.Arrays;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-
-import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdentifierUtil.createFlowAnalyticsIdentifier;
 
 public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IConfigInvHost {
     public static final String ITEM_VISIBILITY_TAG = "item_visibility";
     public static final String FLOW_TEXT_TAG = "flow_text";
     public static final String GRANULARITY_TAG = "granularity";
     public static final String LINE_STYLE_TAG = "line_style";
-    public static final ResourceLocation MODEL_OFF = createFlowAnalyticsIdentifier("part/flow_monitor_off");
-    public static final ResourceLocation MODEL_ON = createFlowAnalyticsIdentifier("part/flow_monitor_on");
-    private static final IPartModel MODELS_OFF = new PartModel(MODEL_BASE, MODEL_OFF, MODEL_STATUS_OFF);
-    private static final IPartModel MODELS_ON = new PartModel(MODEL_BASE, MODEL_ON, MODEL_STATUS_ON);
-    private static final IPartModel MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, MODEL_ON, MODEL_STATUS_HAS_CHANNEL);
 
     private final ConfigInventory filter = ConfigInventory.configTypes(1).changeListener(this::settingsChanged).build();
     private final IConfigManager configManager = IConfigManager.builder(this::settingsChanged)
@@ -166,7 +155,6 @@ public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IC
         return this.configManager;
     }
 
-
     public RedstoneMode getRedstoneMode() {
         return this.configManager.getSetting(Settings.REDSTONE_CONTROLLED);
     }
@@ -193,17 +181,17 @@ public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IC
     }
 
     @Override
-    public void writeConfiguration(final CompoundTag tag, final HolderLookup.Provider provider) {
-        this.filter.writeToChildTag(tag, "filter", provider);
-        this.configManager.writeToNBT(tag, provider);
+    public void writeConfiguration(final ValueOutput tag) {
+        this.filter.writeToChildTag(tag, "filter");
+        this.configManager.writeToNBT(tag);
     }
 
     @Override
-    public void readConfiguration(final CompoundTag tag, final HolderLookup.Provider provider) {
+    public void readConfiguration(final ValueInput tag) {
         this.loadingData = true;
         try {
-            this.filter.readFromChildTag(tag, "filter", provider);
-            this.configManager.readFromNBT(tag, provider);
+            this.filter.readFromChildTag(tag, "filter");
+            this.configManager.readFromNBT(tag);
         } finally {
             this.loadingData = false;
         }
@@ -212,23 +200,23 @@ public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IC
     }
 
     @Override
-    public void writeToNBT(final CompoundTag tag, final HolderLookup.Provider provider) {
-        super.writeToNBT(tag, provider);
-        this.writeConfiguration(tag, provider);
+    public void writeToNBT(final ValueOutput tag) {
+        super.writeToNBT(tag);
+        this.writeConfiguration(tag);
     }
 
     @Override
-    public void readFromNBT(final CompoundTag tag, final HolderLookup.Provider provider) {
-        super.readFromNBT(tag, provider);
-        this.readConfiguration(tag, provider);
+    public void readFromNBT(final ValueInput tag) {
+        super.readFromNBT(tag);
+        this.readConfiguration(tag);
     }
 
     @Override
     public void writeToStream(final RegistryFriendlyByteBuf buffer) {
         super.writeToStream(buffer);
-        final CompoundTag tag = new CompoundTag();
-        this.writeConfiguration(tag, buffer.registryAccess());
-        buffer.writeNbt(tag);
+        final TagValueOutput tag = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, buffer.registryAccess());
+        this.writeConfiguration(tag);
+        buffer.writeNbt(tag.buildResult());
         buffer.writeBoolean(this.displayActive);
         MenuState.Codecs.SAMPLES.encode(buffer, this.displayInflow);
         MenuState.Codecs.SAMPLES.encode(buffer, this.displayOutflow);
@@ -239,7 +227,7 @@ public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IC
         final boolean changed = super.readFromStream(buffer);
         final CompoundTag tag = buffer.readNbt();
         if (tag != null) {
-            this.readConfiguration(tag, buffer.registryAccess());
+            this.readConfiguration(TagValueInput.create(ProblemReporter.DISCARDING, buffer.registryAccess(), tag));
         }
         this.displayActive = buffer.readBoolean();
         this.displayInflow = MenuState.Codecs.SAMPLES.decode(buffer);
@@ -249,13 +237,8 @@ public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IC
     }
 
     @Override
-    public IPartModel getStaticModels() {
-        return this.selectModel(MODELS_OFF, MODELS_ON, MODELS_HAS_CHANNEL);
-    }
-
-    @Override
     public boolean onUseWithoutItem(final Player player, final Vec3 pos) {
-        if (InteractionUtil.canWrenchRotate(player.getInventory().getSelected())) {
+        if (InteractionUtil.canWrenchRotate(player.getInventory().getSelectedItem())) {
             return super.onUseWithoutItem(player, pos);
         }
         if (!this.isClientSide()) {
@@ -264,18 +247,4 @@ public final class FlowMonitorPart extends AbstractFlowDisplayPart implements IC
         return true;
     }
 
-    @Override
-    public boolean requireDynamicRender() {
-        return true;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void renderDynamic(final float partialTicks,
-                              final PoseStack pose,
-                              final MultiBufferSource buffers,
-                              final int light,
-                              final int overlay) {
-        FlowMonitorRenderer.INSTANCE.render(this, partialTicks, pose, buffers, light, overlay);
-    }
 }

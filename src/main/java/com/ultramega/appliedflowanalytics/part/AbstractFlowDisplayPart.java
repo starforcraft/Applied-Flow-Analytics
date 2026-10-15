@@ -13,10 +13,10 @@ import appeng.util.SettingsFrom;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public abstract class AbstractFlowDisplayPart extends AbstractDisplayPart implements IConfigurableObject {
     protected final FlowHistoryNode historyNode;
@@ -41,21 +41,21 @@ public abstract class AbstractFlowDisplayPart extends AbstractDisplayPart implem
         return this.historyNode;
     }
 
-    protected void writeConfiguration(final CompoundTag tag, final HolderLookup.Provider provider) {
+    protected void writeConfiguration(final ValueOutput tag) {
     }
 
-    protected void readConfiguration(final CompoundTag tag, final HolderLookup.Provider provider) {
+    protected void readConfiguration(final ValueInput tag) {
     }
 
     @Override
-    public void writeToNBT(final CompoundTag tag, final HolderLookup.Provider provider) {
-        super.writeToNBT(tag, provider);
+    public void writeToNBT(final ValueOutput tag) {
+        super.writeToNBT(tag);
         this.historyNode.saveHistoryId(tag);
     }
 
     @Override
-    public void readFromNBT(final CompoundTag tag, final HolderLookup.Provider provider) {
-        super.readFromNBT(tag, provider);
+    public void readFromNBT(final ValueInput tag) {
+        super.readFromNBT(tag);
         this.historyNode.loadHistoryId(tag);
     }
 

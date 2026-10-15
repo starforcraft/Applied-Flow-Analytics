@@ -1,9 +1,8 @@
 package com.ultramega.appliedflowanalytics.registry;
 
-import com.mojang.serialization.Codec;
-
 import java.util.UUID;
 
+import com.mojang.serialization.Codec;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;

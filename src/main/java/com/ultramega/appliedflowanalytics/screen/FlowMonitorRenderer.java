@@ -10,6 +10,9 @@ import com.ultramega.appliedflowanalytics.support.ResourceRendering;
 
 import appeng.api.orientation.BlockOrientation;
 import appeng.api.stacks.AEKey;
+import appeng.client.api.AEKeyRenderState;
+import appeng.client.api.renderer.parts.PartDynamicRenderState;
+import appeng.client.api.renderer.parts.PartRenderer;
 import appeng.client.render.BlockEntityRenderHelper;
 
 import java.util.ArrayList;
@@ -18,21 +21,23 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.LightCoordsUtil;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import static com.ultramega.appliedflowanalytics.util.AppliedFlowAnalyticsIdentifierUtil.createFlowAnalyticsTranslation;
 
-public final class FlowMonitorRenderer {
+public final class FlowMonitorRenderer implements PartRenderer<FlowMonitorPart, FlowMonitorRenderer.RenderState> {
     public static final FlowMonitorRenderer INSTANCE = new FlowMonitorRenderer();
     private static final float GRAPH_WIDTH = 200;
     private static final float GRAPH_HEIGHT = 95;
@@ -42,15 +47,14 @@ public final class FlowMonitorRenderer {
     private static final float MIN_LINE_PIXELS = 1.25f;
     private static final float LAYER_DEPTH = 0.0005f;
     private final Map<FlowMonitorPart, Display> displays = new WeakHashMap<>();
+    private final Font font = Minecraft.getInstance().font;
 
-    public void render(final FlowMonitorPart monitor,
-                       final float partialTick,
-                       final PoseStack pose,
-                       final MultiBufferSource buffers,
-                       final int light,
-                       final int overlay) {
+    @Override
+    public void extract(final FlowMonitorPart monitor, final RenderState state, final float partialTicks) {
         final AEKey resource = monitor.getConfiguredResource();
-        if (monitor.getLevel() == null || !monitor.isDisplayActive() || resource == null) {
+        state.visible = monitor.getLevel() != null && monitor.isDisplayActive() && resource != null;
+        state.item.clear();
+        if (!state.visible) {
             return;
         }
         final LineStyle style = monitor.getLineStyle();
@@ -59,46 +63,68 @@ public final class FlowMonitorRenderer {
             display = this.createDisplay(monitor, resource, style);
             this.displays.put(monitor, display);
         }
+        final Direction side = monitor.getSide() == null ? Direction.NORTH : monitor.getSide();
+        state.orientation = BlockOrientation.get(side, monitor.getSpin());
+        state.quads = display.quads();
+        if (monitor.getItemVisibility() == MonitorItemVisibility.SHOW) {
+            state.item.extract(resource, monitor.getLevel(), (int) monitor.getHost().getBlockEntity().getBlockPos().asLong());
+        }
+        final long value = monitor.getFlowText().getValue(display.inflow(), display.outflow());
+        final Component caption = createFlowAnalyticsTranslation("gui", "flow_monitor." + monitor.getFlowText().name().toLowerCase(Locale.ROOT),
+            new ResourceRendering(resource).formatAmount(value), value > 0 ? "+" : "", monitor.getGranularity().perStr());
+        state.caption = caption.getVisualOrderText();
+        state.captionWidth = this.font.width(state.caption);
+        state.captionColor = monitor.getFlowText().getColor();
+    }
 
+    @Override
+    public void submit(final RenderState state, final PoseStack pose, final SubmitNodeCollector nodes,
+                       final CameraRenderState cameraRenderState) {
+        if (!state.visible) {
+            return;
+        }
         pose.pushPose();
         pose.translate(0.5, 0.5, 0.5);
-        final Direction side = monitor.getSide() == null ? Direction.NORTH : monitor.getSide();
-        BlockEntityRenderHelper.rotateToFace(pose, BlockOrientation.get(side, monitor.getSpin()));
+        BlockEntityRenderHelper.rotateToFace(pose, state.orientation);
         pose.translate(0, 0, 0.502);
         pose.pushPose();
         pose.translate(-GRAPH_FACE_WIDTH / 2, 0.14, 0);
         pose.scale(GRAPH_FACE_WIDTH / GRAPH_WIDTH, -0.0033f, 1);
-
-        final float strokeScale = getStrokeScale(pose.last().pose());
-        final VertexConsumer vertices = buffers.getBuffer(RenderType.debugQuads());
-        for (final Quad quad : display.quads()) {
-            quad.render(vertices, pose.last().pose(), strokeScale);
-        }
-        final Font font = Minecraft.getInstance().font;
-        font.drawInBatch("0", -6, 44, 0xffa0a0a0, false, pose.last().pose(), buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
+        final List<Quad> quads = state.quads;
+        final float strokeScale = getStrokeScale(pose.last().pose(), cameraRenderState);
+        nodes.submitCustomGeometry(pose, RenderTypes.debugQuads(), (transform, vertices) -> {
+            for (final Quad quad : quads) {
+                quad.render(vertices, transform.pose(), strokeScale);
+            }
+        });
+        nodes.submitText(pose, -6, 44, Component.literal("0").getVisualOrderText(), false,
+            Font.DisplayMode.NORMAL, LightCoordsUtil.FULL_BRIGHT, 0xffa0a0a0, 0, 0);
         pose.popPose();
 
-        final var rendering = new ResourceRendering(resource);
-        if (monitor.getItemVisibility() == MonitorItemVisibility.SHOW) {
+        if (!state.item.isEmpty()) {
             pose.pushPose();
             pose.translate(0, 0.185, 0.01);
             pose.scale(ITEM_ICON_SCALE, ITEM_ICON_SCALE, ITEM_ICON_SCALE);
-            rendering.render(resource, pose, buffers, LightTexture.FULL_BRIGHT, monitor.getLevel());
+            state.item.submit(pose, nodes, LightCoordsUtil.FULL_BRIGHT);
             pose.popPose();
         }
-
-        final long value = monitor.getFlowText().getValue(display.inflow(), display.outflow());
-        final String caption = createFlowAnalyticsTranslation("gui", "flow_monitor." + monitor.getFlowText().name().toLowerCase(Locale.ROOT),
-            rendering.formatAmount(value), value > 0 ? "+" : "", monitor.getGranularity().perStr()).getString();
-        final int width = font.width(caption);
-        final float scale = Math.min(0.0075f, 0.66f / Math.max(1, width));
+        final float scale = Math.min(0.0075f, 0.66f / Math.max(1, state.captionWidth));
         pose.pushPose();
         pose.translate(0, -0.185, 0.003);
         pose.scale(scale, -scale, scale);
-        font.drawInBatch(caption, -width / 2f, 0, monitor.getFlowText().getColor(), false,
-            pose.last().pose(), buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
+        nodes.submitText(pose, -state.captionWidth / 2f, 0, state.caption, false, Font.DisplayMode.NORMAL, LightCoordsUtil.FULL_BRIGHT, state.captionColor, 0, 0);
         pose.popPose();
         pose.popPose();
+    }
+
+    @Override
+    public RenderState createState() {
+        return new RenderState();
+    }
+
+    @Override
+    public Class<RenderState> stateClass() {
+        return RenderState.class;
     }
 
     private Display createDisplay(final FlowMonitorPart monitor, final AEKey resource, final LineStyle style) {
@@ -151,8 +177,8 @@ public final class FlowMonitorRenderer {
             (float) (x2 - tx), (float) (y2 - ty), (float) (x2 + tx), (float) (y2 + ty), (float) tx, (float) ty, z, color));
     }
 
-    private static float getStrokeScale(final Matrix4f model) {
-        final Matrix4f projection = new Matrix4f(RenderSystem.getProjectionMatrix()).mul(RenderSystem.getModelViewMatrix()).mul(model);
+    private static float getStrokeScale(final Matrix4f model, final CameraRenderState camera) {
+        final Matrix4f projection = new Matrix4f(camera.projectionMatrix).mul(camera.viewRotationMatrix).mul(model);
         final Vector3f center = projection.transformProject(new Vector3f(GRAPH_WIDTH / 2, GRAPH_HEIGHT / 2, 0));
         final Vector3f x = projection.transformProject(new Vector3f(GRAPH_WIDTH / 2 + 1, GRAPH_HEIGHT / 2, 0));
         final Vector3f y = projection.transformProject(new Vector3f(GRAPH_WIDTH / 2, GRAPH_HEIGHT / 2 + 1, 0));
@@ -170,6 +196,16 @@ public final class FlowMonitorRenderer {
             return 1;
         }
         return (float) Math.max(1, MIN_LINE_PIXELS / pixels);
+    }
+
+    public static final class RenderState extends PartDynamicRenderState {
+        private boolean visible;
+        private BlockOrientation orientation;
+        private List<Quad> quads = List.of();
+        private final AEKeyRenderState item = new AEKeyRenderState();
+        private FormattedCharSequence caption;
+        private int captionWidth;
+        private int captionColor;
     }
 
     private record Display(long revision, LineStyle style, List<Quad> quads, long inflow, long outflow) {

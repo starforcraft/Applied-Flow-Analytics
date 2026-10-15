@@ -14,7 +14,7 @@ import appeng.util.ConfigInventory;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 public abstract class AbstractFlowPartMenu<T extends AEBasePart & IConfigurableObject> extends AEBaseMenu implements IConfigurableObject {
     protected final T host;
@@ -53,7 +53,7 @@ public abstract class AbstractFlowPartMenu<T extends AEBasePart & IConfigurableO
         }
         this.getConfigManager().putSetting(setting, value);
         if (this.isClientSide()) {
-            PacketDistributor.sendToServer(new ConfigValuePacket(setting, value));
+            ClientPacketDistributor.sendToServer(new ConfigValuePacket(setting, value));
         }
     }
 

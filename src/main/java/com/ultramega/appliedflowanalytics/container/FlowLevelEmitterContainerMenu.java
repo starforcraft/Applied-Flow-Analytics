@@ -3,8 +3,10 @@ package com.ultramega.appliedflowanalytics.container;
 import com.ultramega.appliedflowanalytics.part.FlowLevelEmitterPart;
 
 import appeng.api.stacks.GenericStack;
+import appeng.menu.guisync.ClientActionKey;
 import appeng.menu.implementations.MenuTypeBuilder;
 
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 
@@ -22,13 +24,14 @@ public final class FlowLevelEmitterContainerMenu extends AbstractFlowPartMenu<Fl
         })
         .buildUnregistered(createFlowAnalyticsIdentifier("flow_level_emitter"));
 
+    private static final ClientActionKey<Double> ACTION_AMOUNT = new ClientActionKey<>("amount");
     private double currentAmount;
 
     public FlowLevelEmitterContainerMenu(final MenuType<FlowLevelEmitterContainerMenu> type, final int id,
                                          final Inventory inventory, final FlowLevelEmitterPart host) {
         super(type, id, inventory, host);
 
-        this.registerClientAction("amount", Double.class, this::setAmount);
+        this.registerClientAction(ACTION_AMOUNT, ByteBufCodecs.DOUBLE, this::setAmount);
         this.addFilterAndInventory(inventory, host.getConfig(), 98);
     }
 
@@ -47,7 +50,7 @@ public final class FlowLevelEmitterContainerMenu extends AbstractFlowPartMenu<Fl
         if (this.isClientSide()) {
             if (value != this.currentAmount) {
                 this.currentAmount = value;
-                this.sendClientAction("amount", value);
+                this.sendClientAction(ACTION_AMOUNT, value);
             }
         } else {
             this.host.setAmount(value);

@@ -3,17 +3,12 @@ package com.ultramega.appliedflowanalytics;
 import com.ultramega.appliedflowanalytics.config.ServerConfigImpl;
 import com.ultramega.appliedflowanalytics.network.FlowHistoryNetworkComponent;
 import com.ultramega.appliedflowanalytics.network.MenuStateUpdateMessage;
-import com.ultramega.appliedflowanalytics.part.FlowLevelEmitterPart;
-import com.ultramega.appliedflowanalytics.part.FlowMonitorPart;
-import com.ultramega.appliedflowanalytics.part.FlowTerminalPart;
 import com.ultramega.appliedflowanalytics.registry.ModDataComponents;
 import com.ultramega.appliedflowanalytics.registry.ModItems;
 import com.ultramega.appliedflowanalytics.registry.ModMenus;
 
 import appeng.api.networking.GridServices;
-import appeng.api.parts.PartModels;
 
-import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -40,17 +35,13 @@ public final class ModInitializer {
         ModDataComponents.register(eventBus);
         ModItems.register(eventBus);
         ModMenus.register(eventBus);
-        PartModels.registerModels(
-            FlowTerminalPart.MODEL_OFF, FlowTerminalPart.MODEL_ON,
-            FlowMonitorPart.MODEL_OFF, FlowMonitorPart.MODEL_ON,
-            FlowLevelEmitterPart.MODEL_BASE_OFF, FlowLevelEmitterPart.MODEL_BASE_ON
-        );
+
         eventBus.addListener(this::onCommonSetup);
         eventBus.addListener(this::registerPayloads);
         NeoForge.EVENT_BUS.addListener((final ServerTickEvent.Post event) -> AppliedFlowAnalyticsMod.tick());
         NeoForge.EVENT_BUS.addListener((final ServerStoppedEvent event) -> AppliedFlowAnalyticsMod.serverStopped());
 
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             ClientModInitializer.register(eventBus);
         }
     }
@@ -66,10 +57,8 @@ public final class ModInitializer {
             MenuStateUpdateMessage.TYPE,
             MenuStateUpdateMessage.STREAM_CODEC,
             (message, context) -> {
-                if (context.flow() == PacketFlow.SERVERBOUND && context.player() instanceof ServerPlayer player) {
+                if (context.player() instanceof ServerPlayer player) {
                     message.handleServer(player);
-                } else if (context.flow() == PacketFlow.CLIENTBOUND) {
-                    ClientModInitializer.handleMenuState(message);
                 }
             });
     }

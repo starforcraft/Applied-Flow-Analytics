@@ -7,8 +7,10 @@ import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public final class FlowHistoryNode implements IGridNodeService {
     private static final String HISTORY_ID = "FlowHistoryId";
@@ -54,13 +56,13 @@ public final class FlowHistoryNode implements IGridNodeService {
         return grid == null ? Optional.empty() : Optional.of(grid.getService(FlowHistoryNetworkComponent.class));
     }
 
-    public void saveHistoryId(final CompoundTag tag) {
+    public void saveHistoryId(final ValueOutput tag) {
         if (this.historyId != null) {
-            tag.putUUID(HISTORY_ID, this.historyId);
+            tag.store(HISTORY_ID, UUIDUtil.CODEC, this.historyId);
         }
     }
 
-    public void loadHistoryId(final CompoundTag tag) {
-        this.historyId = tag.hasUUID(HISTORY_ID) ? tag.getUUID(HISTORY_ID) : null;
+    public void loadHistoryId(final ValueInput tag) {
+        this.historyId = tag.read(HISTORY_ID, UUIDUtil.CODEC).orElse(null);
     }
 }
