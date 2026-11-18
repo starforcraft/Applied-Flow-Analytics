@@ -1,5 +1,6 @@
 package com.ultramega.appliedflowanalytics;
 
+import com.ultramega.appliedflowanalytics.data.FlowSnapshotData;
 import com.ultramega.appliedflowanalytics.network.FlowHistoryNetworkComponent;
 
 import java.util.ArrayDeque;
@@ -29,6 +30,7 @@ public final class AppliedFlowAnalyticsMod {
     }
 
     public static void serverStopped() {
+        FlowSnapshotData.flushPendingSaves();
         WORK_QUEUE.clear();
         FlowHistoryNetworkComponent.clear();
     }
