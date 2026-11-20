@@ -113,6 +113,10 @@ public final class FlowHistoryNetworkComponent implements IGridService, IGridSer
     }
 
     private void resolveHistory() {
+        if (this.data != null && this.data.pollLoad()) {
+            this.queries.clear();
+            this.rollingQueries.clear();
+        }
         if (!this.resolve || this.nodes.isEmpty()) {
             return;
         }
